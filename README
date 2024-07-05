@@ -1,0 +1,135 @@
+
+# Race Condition Vulnerability and Exploit
+
+## Introduction
+
+A race condition occurs when two or more threads can access shared data and they try to change it at the same time. Because the thread scheduling algorithm can swap between threads at any time, you don't know the order in which the threads will attempt to access the shared data. Therefore, the result of the change in data depends on the order of execution of the threads, which leads to inconsistent and unpredictable results.
+
+## Vulnerable Code
+
+The following code demonstrates a simple race condition vulnerability. The code attempts to check and update a shared resource (in this case, a file) in a non-atomic way.
+
+### Vulnerable Script (vulnerable.py)
+
+```python
+import os
+import time
+import threading
+
+FILE_PATH = "shared_resource.txt"
+
+def initialize_file():
+    with open(FILE_PATH, "w") as f:
+        f.write("100")
+
+def check_and_update():
+    # Read the current value
+    with open(FILE_PATH, "r") as f:
+        value = int(f.read())
+
+    # Simulate some processing time
+    time.sleep(1)
+
+    # Increment the value
+    value += 1
+
+    # Write the new value back
+    with open(FILE_PATH, "w") as f:
+        f.write(str(value))
+
+if __name__ == "__main__":
+    initialize_file()
+
+    threads = []
+    for i in range(10):
+        t = threading.Thread(target=check_and_update)
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    with open(FILE_PATH, "r") as f:
+        print(f"Final value: {f.read()}")
+```
+
+In this code:
+- `initialize_file()` initializes the file with the value `100`.
+- `check_and_update()` reads the value, waits for 1 second (simulating processing time), increments the value, and writes it back.
+- Multiple threads are created to run `check_and_update()` concurrently.
+
+## Exploit
+
+The race condition occurs because multiple threads are reading and writing the value simultaneously without any synchronization. This can be exploited to demonstrate inconsistent final values.
+
+### Exploit Script (exploit.py)
+
+```python
+import os
+import time
+import threading
+
+FILE_PATH = "shared_resource.txt"
+
+def initialize_file():
+    with open(FILE_PATH, "w") as f:
+        f.write("100")
+
+def check_and_update():
+    # Read the current value
+    with open(FILE_PATH, "r") as f:
+        value = int(f.read())
+
+    # Simulate some processing time
+    time.sleep(1)
+
+    # Increment the value
+    value += 1
+
+    # Write the new value back
+    with open(FILE_PATH, "w") as f:
+        f.write(str(value))
+
+if __name__ == "__main__":
+    initialize_file()
+
+    threads = []
+    for i in range(10):
+        t = threading.Thread(target=check_and_update)
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    with open(FILE_PATH, "r") as f:
+        print(f"Final value: {f.read()}")
+```
+
+### Steps to Run the Exploit
+
+1. **Initialize the File:**
+   Ensure the `shared_resource.txt` file is initialized correctly before running the threads.
+
+2. **Run the Vulnerable Script:**
+   Execute the `vulnerable.py` script.
+
+3. **Observe the Final Value:**
+   The final value in the `shared_resource.txt` file should be less than `110` because some updates are lost due to the race condition.
+
+### Expected Output
+
+Due to the race condition, the final value printed by the script is likely to be less than `110`. Each thread should increment the value by `1`, so with `10` threads starting with the value `100`, the final value should be `110`. However, because of the race condition, some increments are lost.
+
+```bash
+Final value: 105
+```
+
+## Conclusion
+
+Race conditions are critical vulnerabilities in concurrent programming. Proper synchronization mechanisms like locks or atomic operations should be used to prevent such issues. This example demonstrates how a simple read-modify-write operation can lead to unexpected results when multiple threads are involved.
+
+## References
+
+- [Concurrency in Python](https://docs.python.org/3/library/threading.html)
+- [Race Condition](https://en.wikipedia.org/wiki/Race_condition)
