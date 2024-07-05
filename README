@@ -1,135 +1,60 @@
+Vulnerable Code Example (C)
+The following example is a simple program in C that demonstrates a race condition vulnerability. The program simulates a banking system where two threads attempt to withdraw money from the same account simultaneously.
 
-# Race Condition Vulnerability and Exploit
 
-## Introduction
+Exploit
+The race condition occurs because both threads check the account balance and then subtract the amount without proper synchronization. This can lead to both threads withdrawing money simultaneously, resulting in an incorrect final balance.
 
-A race condition occurs when two or more threads can access shared data and they try to change it at the same time. Because the thread scheduling algorithm can swap between threads at any time, you don't know the order in which the threads will attempt to access the shared data. Therefore, the result of the change in data depends on the order of execution of the threads, which leads to inconsistent and unpredictable results.
+To exploit this vulnerability, you can run the program multiple times and observe that sometimes the final balance is incorrect.
 
-## Vulnerable Code
+You may see output like this:
 
-The following code demonstrates a simple race condition vulnerability. The code attempts to check and update a shared resource (in this case, a file) in a non-atomic way.
+Balance before withdrawal: 1000
+Balance before withdrawal: 1000
+Balance after withdrawal: 500
+Balance after withdrawal: 500
+Final balance: 500
+Here, both threads checked the balance to be 1000 and then subtracted 500 each, resulting in an incorrect final balance of 500 instead of 0.
 
-### Vulnerable Script (vulnerable.py)
 
-```python
-import os
-import time
-import threading
 
-FILE_PATH = "shared_resource.txt"
+gcc -pthread -o race_condition_example race_condition_example.c
 
-def initialize_file():
-    with open(FILE_PATH, "w") as f:
-        f.write("100")
 
-def check_and_update():
-    # Read the current value
-    with open(FILE_PATH, "r") as f:
-        value = int(f.read())
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
 
-    # Simulate some processing time
-    time.sleep(1)
+#define INITIAL_BALANCE 1000
 
-    # Increment the value
-    value += 1
+typedef struct {
+    int balance;
+} Account;
 
-    # Write the new value back
-    with open(FILE_PATH, "w") as f:
-        f.write(str(value))
+void* withdraw(void* arg) {
+    Account* account = (Account*)arg;
+    int amount = 500;
+    if (account->balance >= amount) {
+        printf("Balance before withdrawal: %d\n", account->balance);
+        account->balance -= amount;
+        printf("Balance after withdrawal: %d\n", account->balance);
+    } else {
+        printf("Insufficient funds\n");
+    }
+    return NULL;
+}
 
-if __name__ == "__main__":
-    initialize_file()
+int main() {
+    pthread_t t1, t2;
+    Account account;
+    account.balance = INITIAL_BALANCE;
 
-    threads = []
-    for i in range(10):
-        t = threading.Thread(target=check_and_update)
-        threads.append(t)
-        t.start()
+    pthread_create(&t1, NULL, withdraw, &account);
+    pthread_create(&t2, NULL, withdraw, &account);
 
-    for t in threads:
-        t.join()
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
 
-    with open(FILE_PATH, "r") as f:
-        print(f"Final value: {f.read()}")
-```
-
-In this code:
-- `initialize_file()` initializes the file with the value `100`.
-- `check_and_update()` reads the value, waits for 1 second (simulating processing time), increments the value, and writes it back.
-- Multiple threads are created to run `check_and_update()` concurrently.
-
-## Exploit
-
-The race condition occurs because multiple threads are reading and writing the value simultaneously without any synchronization. This can be exploited to demonstrate inconsistent final values.
-
-### Exploit Script (exploit.py)
-
-```python
-import os
-import time
-import threading
-
-FILE_PATH = "shared_resource.txt"
-
-def initialize_file():
-    with open(FILE_PATH, "w") as f:
-        f.write("100")
-
-def check_and_update():
-    # Read the current value
-    with open(FILE_PATH, "r") as f:
-        value = int(f.read())
-
-    # Simulate some processing time
-    time.sleep(1)
-
-    # Increment the value
-    value += 1
-
-    # Write the new value back
-    with open(FILE_PATH, "w") as f:
-        f.write(str(value))
-
-if __name__ == "__main__":
-    initialize_file()
-
-    threads = []
-    for i in range(10):
-        t = threading.Thread(target=check_and_update)
-        threads.append(t)
-        t.start()
-
-    for t in threads:
-        t.join()
-
-    with open(FILE_PATH, "r") as f:
-        print(f"Final value: {f.read()}")
-```
-
-### Steps to Run the Exploit
-
-1. **Initialize the File:**
-   Ensure the `shared_resource.txt` file is initialized correctly before running the threads.
-
-2. **Run the Vulnerable Script:**
-   Execute the `vulnerable.py` script.
-
-3. **Observe the Final Value:**
-   The final value in the `shared_resource.txt` file should be less than `110` because some updates are lost due to the race condition.
-
-### Expected Output
-
-Due to the race condition, the final value printed by the script is likely to be less than `110`. Each thread should increment the value by `1`, so with `10` threads starting with the value `100`, the final value should be `110`. However, because of the race condition, some increments are lost.
-
-```bash
-Final value: 105
-```
-
-## Conclusion
-
-Race conditions are critical vulnerabilities in concurrent programming. Proper synchronization mechanisms like locks or atomic operations should be used to prevent such issues. This example demonstrates how a simple read-modify-write operation can lead to unexpected results when multiple threads are involved.
-
-## References
-
-- [Concurrency in Python](https://docs.python.org/3/library/threading.html)
-- [Race Condition](https://en.wikipedia.org/wiki/Race_condition)
+    printf("Final balance: %d\n", account.balance);
+    return 0;
+}
