@@ -1,13 +1,9 @@
-# Vulnerable Bank and Exploit README
+# Vulnerable Code and Exploit for Race Condition
 
-## About
-This repository contains a vulnerable Python script that demonstrates a race condition in a bank deposit and withdrawal system. It also includes an exploit script that demonstrates how an attacker could take advantage of this vulnerability.
-
-## Vulnerable Bank Script
-The `bank.py` script simulates a bank system with deposit and withdrawal functionality. It uses multiple threads to process deposits and withdrawals simultaneously, which can lead to a race condition.
+## Vulnerable Code
+The following Python script demonstrates a race condition vulnerability in a bank deposit and withdrawal system.
 
 ```python
-# bank.py
 import threading
 import time
 
@@ -44,10 +40,10 @@ def vulnerable_transaction():
 vulnerable_transaction()
 
 
-Exploit Script
-The exploit.py script exploits the race condition in the bank.py script by creating multiple threads that deposit and withdraw money simultaneously.
+## Exploit Code
+The following Python script exploits the race condition in the vulnerable code.
 
-# exploit.py
+```python
 import threading
 
 class ExploitBank:
@@ -70,9 +66,10 @@ exploit_bank = ExploitBank(bank)
 exploit_bank.exploit()
 
 
-How to Run
-To run the vulnerable bank script:
+
+## How to Run
+To run the vulnerable code:
 python bank.py
 
-To run the exploit script:
+To run the exploit code:
 python exploit.py
