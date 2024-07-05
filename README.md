@@ -41,14 +41,14 @@ def vulnerable_transaction():
 
     print("Final balance:", bank.balance)
 
-vulnerable_transaction()```
+vulnerable_transaction()
 
 
 Exploit Script
 The exploit.py script exploits the race condition in the bank.py script by creating multiple threads that deposit and withdraw money simultaneously.
 
 # exploit.py
-```import threading
+import threading
 
 class ExploitBank:
     def __init__(self, bank):
@@ -67,12 +67,12 @@ class ExploitBank:
 
 bank = Bank()
 exploit_bank = ExploitBank(bank)
-exploit_bank.exploit()```
+exploit_bank.exploit()
 
 
 How to Run
 To run the vulnerable bank script:
-```python bank.py```
+python bank.py
 
 To run the exploit script:
-```python exploit.py```
+python exploit.py
